@@ -183,7 +183,9 @@
     <button class="login-btn" onclick="doLogin()">Enter Portal</button>
     <div class="login-error" id="login-error">Incorrect portal ID or password. Please try again.</div>
     <div style="margin-top:24px;padding-top:16px;border-top:1px solid #eee;">
-      <span style="font-size:12px;color:#aaa;cursor:pointer;" onclick="showAdminLogin()">Agent login</span>
+      <div id="admin-login-area" style="text-align:center;">
+      <span style="font-size:12px;color:#aaa;cursor:pointer;" onclick="document.getElementById('admin-login-area').innerHTML='<input id=adm-pw type=password placeholder=Agent password style=\'font-family:DM Sans,sans-serif;font-size:14px;padding:10px;border:1px solid #ddd;border-radius:8px;width:100%;box-sizing:border-box;margin-bottom:8px;\' onkeydown=\'if(event.key===\'Enter\')checkAdminPw()\'>  <button onclick=checkAdminPw() style=\'background:#111;color:white;font-family:DM Sans,sans-serif;font-size:13px;font-weight:600;padding:8px 20px;border:none;border-radius:6px;cursor:pointer;width:100%;\'>Enter</button>'">Agent login</span>
+    </div>
     </div>
   </div>
 </div>
@@ -276,13 +278,17 @@ function loadPortal(clientData) {
 
 // ADMIN LOGIN
 function showAdminLogin() {
-  const pw = prompt('Agent password:');
+  checkAdminPw();
+}
+function checkAdminPw() {
+  var pw = document.getElementById('adm-pw') ? document.getElementById('adm-pw').value : '';
   if (pw === ADMIN_PASSWORD) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('admin-screen').style.display = 'block';
     loadClientList();
-  } else if (pw !== null) {
-    alert('Incorrect password.');
+  } else {
+    var el = document.getElementById('adm-pw');
+    if (el) { el.style.borderColor = '#CC1F1F'; el.value = ''; el.placeholder = 'Incorrect — try again'; }
   }
 }
 
