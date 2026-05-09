@@ -65,6 +65,8 @@
 #admin-screen {
   display: none;
   min-height: 100vh;
+  position: relative;
+  z-index: 10;
   background: #111;
   font-family: 'DM Sans', sans-serif;
   padding: 40px 20px;
@@ -281,14 +283,21 @@ function showAdminLogin() {
   checkAdminPw();
 }
 function checkAdminPw() {
-  var pw = document.getElementById('adm-pw') ? document.getElementById('adm-pw').value : '';
+  var pwEl = document.getElementById('adm-pw');
+  var pw = pwEl ? pwEl.value.trim() : '';
   if (pw === ADMIN_PASSWORD) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('admin-screen').style.display = 'block';
+    var ls = document.getElementById('login-screen');
+    var as = document.getElementById('admin-screen');
+    if (ls) ls.style.display = 'none';
+    if (as) { as.style.display = 'block'; }
     loadClientList();
   } else {
-    var el = document.getElementById('adm-pw');
-    if (el) { el.style.borderColor = '#CC1F1F'; el.value = ''; el.placeholder = 'Incorrect — try again'; }
+    if (pwEl) { 
+      pwEl.style.borderColor = '#CC1F1F'; 
+      pwEl.value = ''; 
+      pwEl.placeholder = 'Incorrect password - try again'; 
+      pwEl.focus();
+    }
   }
 }
 
@@ -308,13 +317,13 @@ async function createClient() {
 
   const hash = await hashPassword(password);
 
-  const { data, error } = await supabase.from('clients').insert({
+  const { data, error } = await supabase.from('clients').insert([{
     portal_id: portalId,
     client_name: name,
     property_address: address,
     password_hash: hash,
     agent_id: 'jason'
-  }).select().single();
+  }]).select().single();
 
   if (error) { alert('Error creating portal: ' + error.message); return; }
 
