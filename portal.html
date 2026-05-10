@@ -3259,6 +3259,116 @@ function showPage(id, tabEl) {
   window.handleTitleUpload = handleTitleUpload;
   window.removeTitleFile = removeTitleFile;
 
+
+  // ——— AUTO SAVE & LOAD ———
+  var _saveDebounce = {};
+
+  function autoSave(fieldName, value) {
+    if (!window._clientId) return;
+    clearTimeout(_saveDebounce[fieldName]);
+    _saveDebounce[fieldName] = setTimeout(function() {
+      var update = {};
+      update[fieldName] = value;
+      var sb = window.supabase ? window.supabase.createClient(
+        'https://ojjakbevrooqeylzgaoz.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qamFrYmV2cm9vcWV5bHpnYW96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNDU3MjksImV4cCI6MjA5MzYyMTcyOX0.MjyJpemIQgfzkAWWfdcc7KohPLPKqgLFTp33wZvmqlI'
+      ) : null;
+      if (sb) sb.from('clients').update(update).eq('id', window._clientId).then(function(r) {
+        if (r.error) console.warn('Save error:', r.error.message);
+      });
+    }, 1000);
+  }
+
+  function saveIntakeData() {
+    if (!window._clientId) return;
+    // Collect all intake form inputs
+    var intakeForm = document.getElementById('intake-form');
+    if (!intakeForm) return;
+    var data = {};
+    var inputs = intakeForm.querySelectorAll('input, textarea, select');
+    inputs.forEach(function(el, i) {
+      var key = el.id || el.name || ('field_' + i);
+      if (el.type === 'checkbox') data[key] = el.checked;
+      else data[key] = el.value;
+    });
+    autoSave('intake_data', JSON.stringify(data));
+  }
+
+  function loadIntakeData(intakeData) {
+    if (!intakeData) return;
+    var data;
+    try { data = typeof intakeData === 'string' ? JSON.parse(intakeData) : intakeData; } catch(e) { return; }
+    var intakeForm = document.getElementById('intake-form');
+    if (!intakeForm) return;
+    var inputs = intakeForm.querySelectorAll('input, textarea, select');
+    inputs.forEach(function(el, i) {
+      var key = el.id || el.name || ('field_' + i);
+      if (data[key] !== undefined) {
+        if (el.type === 'checkbox') el.checked = data[key];
+        else el.value = data[key];
+      }
+    });
+  }
+
+  function initAutoSave() {
+    // Wire up intake form to auto-save on change
+    var intakeForm = document.getElementById('intake-form');
+    if (intakeForm) {
+      intakeForm.addEventListener('input', function() { saveIntakeData(); });
+      intakeForm.addEventListener('change', function() { saveIntakeData(); });
+    }
+
+    // Wire up date fields
+    var dateFields = {
+      'date-purchase': 'date_purchase',
+      'date-closing': 'date_closing',
+      'date-inspection': 'date_inspection',
+      'date-response': 'date_response'
+    };
+    Object.keys(dateFields).forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('change', function() { autoSave(dateFields[id], this.value); });
+    });
+
+    // Wire up header fields
+    var clientNameEl = document.getElementById('header-client-name');
+    if (clientNameEl) clientNameEl.addEventListener('input', function() { autoSave('client_name', this.value); });
+    var addrEl = document.getElementById('header-address');
+    if (addrEl) addrEl.addEventListener('input', function() { autoSave('property_address', this.value); });
+  }
+
+  function loadAllSavedData(clientData) {
+    if (!clientData) return;
+    window._clientId = clientData.id;
+
+    // Fill header
+    var nameEl = document.getElementById('header-client-name');
+    if (nameEl && clientData.client_name) nameEl.value = clientData.client_name;
+    var addrEl = document.getElementById('header-address');
+    if (addrEl && clientData.property_address) addrEl.value = clientData.property_address;
+
+    // Fill dates
+    var dateMap = {
+      'date-purchase': clientData.date_purchase,
+      'date-closing': clientData.date_closing,
+      'date-inspection': clientData.date_inspection,
+      'date-response': clientData.date_response,
+      'insp-date-inspection': clientData.date_inspection,
+      'insp-date-response': clientData.date_response,
+      'closing-date-display': clientData.date_closing
+    };
+    Object.keys(dateMap).forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el && dateMap[id]) el.value = dateMap[id];
+    });
+    if (clientData.date_closing) updateClosingCountdown(clientData.date_closing);
+
+    // Load intake form data
+    if (clientData.intake_data) {
+      setTimeout(function() { loadIntakeData(clientData.intake_data); }, 100);
+    }
+  }
+
   // Initialize all hub2 sections after DOM is ready
 
 document.addEventListener('DOMContentLoaded', function() {
