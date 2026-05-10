@@ -186,11 +186,13 @@ async function loadPortals() {
   var base = window.location.href.replace('index.html','').replace(/\?.*$/,'');
   container.innerHTML = res.data.map(function(c) {
     var link = base + '?portal=' + c.portal_id;
-    return '<div class="client-item">'
-      + '<div class="info"><div class="name">' + (c.client_name||'Unnamed') + '</div>'
-      + '<div class="detail">' + (c.property_address||'No address') + ' &nbsp;&middot;&nbsp; ID: <strong>' + c.portal_id + '</strong></div></div>'
-      + '<button class="copy-btn" onclick="copyLink(\'' + link + '\')">Copy Link</button>'
-      + '<button class="del-btn" onclick="deletePortal(\'' + c.id + '\')">&#10005;</button>'
+    return '<div class="client-item" onclick="openClientPortal(\'' + c.id + '\')" style="cursor:pointer;transition:border-color 0.15s;" onmouseover="this.style.borderColor=\'#CC1F1F\'" onmouseout="this.style.borderColor=\'#eee\'">'
+      + '<div class="info">'
+      + '<div class="name">' + (c.client_name||'Unnamed') + ' <span style="font-size:11px;color:#CC1F1F;font-weight:600;">&#8594; Open</span></div>'
+      + '<div class="detail">' + (c.property_address||'No address') + ' &nbsp;&middot;&nbsp; ID: <strong>' + c.portal_id + '</strong></div>'
+      + '</div>'
+      + '<button class="copy-btn" onclick="event.stopPropagation();copyLink(\'' + link + '\')">Copy Link</button>'
+      + '<button class="del-btn" onclick="event.stopPropagation();deletePortal(\'' + c.id + '\')">&#10005;</button>'
       + '</div>';
   }).join('');
 }
