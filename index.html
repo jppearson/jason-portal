@@ -195,6 +195,13 @@ async function loadPortals() {
   }).join('');
 }
 
+async function openClientPortal(clientId) {
+  var res = await sb.from('clients').select('*').eq('id', clientId).single();
+  if (res.error || !res.data) { alert('Could not load client data.'); return; }
+  sessionStorage.setItem('portal_client', JSON.stringify(res.data));
+  window.location.href = 'portal.html';
+}
+
 function copyLink(url) {
   navigator.clipboard.writeText(url).then(function() {
     alert('Link copied!\n\n' + url + '\n\nShare this with your client.');
