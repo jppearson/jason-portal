@@ -2101,6 +2101,12 @@
 </div>
 
 <script>
+(function() {
+  if (!sessionStorage.getItem('portal_client')) {
+    window.location.replace('index.html');
+  }
+})();
+
 
 function showPage(id, tabEl) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
